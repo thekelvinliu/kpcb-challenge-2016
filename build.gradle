@@ -1,0 +1,22 @@
+apply plugin: 'java'
+
+version = '0.0.1'
+jar {
+    manifest {
+        attributes 'Main-Class': 'com.thekelvinliu.KPCBChallenge.Main',
+                   'Implementation-Version': version
+    }
+}
+
+repositories  {
+    mavenCentral()
+}
+
+dependencies {
+    testCompile 'junit:junit:4.+'
+}
+
+//show detailed compilation warnings
+tasks.withType(JavaCompile) {
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+}
