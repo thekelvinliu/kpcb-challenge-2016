@@ -4,7 +4,8 @@ version = '0.0.1'
 
 jar {
     manifest {
-        attributes 'Implementation-Version': version
+        attributes 'Implementation-Version': version,
+                   'Main-Class': 'com.thekelvinliu.KPCBChallenge.Main'
     }
 }
 
@@ -17,10 +18,11 @@ dependencies {
 }
 
 //show detailed compilation warnings
-tasks.withType(JavaCompile) {
-    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
-}
+// tasks.withType(JavaCompile) {
+//     options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
+// }
 
+//generate javadocs for everything in this package
 tasks.withType(Javadoc) {
     options.memberLevel = JavadocMemberLevel.PACKAGE
 }
