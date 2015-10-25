@@ -4,8 +4,7 @@ version = '0.0.1'
 
 jar {
     manifest {
-        attributes 'Implementation-Version': version,
-                   'Main-Class': 'com.thekelvinliu.KPCBChallenge.Main'
+        attributes 'Implementation-Version': version
     }
 }
 
@@ -25,4 +24,13 @@ dependencies {
 //generate javadocs for everything in this package
 tasks.withType(Javadoc) {
     options.memberLevel = JavadocMemberLevel.PACKAGE
+}
+
+//copy jar lib to another folder
+task copyJar(type: Copy) {
+    from jar
+    into './api_test'
+}
+build.doLast {
+    copyJar
 }
