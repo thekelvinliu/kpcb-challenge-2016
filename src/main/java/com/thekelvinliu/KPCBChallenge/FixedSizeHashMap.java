@@ -195,6 +195,12 @@ public class FixedSizeHashMap<T> {
     public int getSize() {
         return this.size;
     }
+    /**
+     * Prints the implicit tree in a preorder fashion. Only used for testing.
+     */
+    public void print() {
+        this.preorderPrint(this.rootInd, "");
+    }
 
     //TREE METHODS (PRIVATE)
     /**
@@ -263,6 +269,13 @@ public class FixedSizeHashMap<T> {
     }
 
     //TREE ROTATIONS
+    /**
+     * Performs a tree rotation for the left left case at startInd.
+     *
+     * See <a href="https://en.wikipedia.org/wiki/AVL_tree#Insertion">this</a>
+     * Wikipedia article for examples of the cases used.
+     * @return      the new start index after rotation
+     */
     private int rotateCaseLL(int startInd) {
         int newStartInd = this.tree[startInd].left;
         this.tree[startInd].left = this.tree[newStartInd].right;
@@ -272,6 +285,13 @@ public class FixedSizeHashMap<T> {
         this.updateHeight(newStartInd);
         return newStartInd;
     }
+    /**
+     * Performs a tree rotation for the right right case at startInd.
+     *
+     * See <a href="https://en.wikipedia.org/wiki/AVL_tree#Insertion">this</a>
+     * Wikipedia article for examples of the cases used.
+     * @return      the new start index after rotation
+     */
     private int rotateCaseRR(int startInd) {
         int newStartInd = this.tree[startInd].right;
         this.tree[startInd].right = this.tree[newStartInd].left;
@@ -281,39 +301,70 @@ public class FixedSizeHashMap<T> {
         this.updateHeight(newStartInd);
         return newStartInd;
     }
+    /**
+     * Performs a tree rotation for the left right case at startInd.
+     *
+     * See <a href="https://en.wikipedia.org/wiki/AVL_tree#Insertion">this</a>
+     * Wikipedia article for examples of the cases used.
+     * @return      the new start index after rotation
+     */
     private int rotatecaseLR(int startInd) {
         this.tree[startInd].left = this.rotateCaseRR(this.tree[startInd].left);
         return this.rotateCaseLL(startInd);
     }
+    /**
+     * Performs a tree rotation for the right left case at startInd.
+     *
+     * See <a href="https://en.wikipedia.org/wiki/AVL_tree#Insertion">this</a>
+     * Wikipedia article for examples of the cases used.
+     * @return      the new start index after rotation
+     */
     private int rotateCaseRL(int startInd) {
         this.tree[startInd].right = this.rotateCaseLL(this.tree[startInd].right);
         return this.rotateCaseRR(startInd);
     }
 
     //UTILITIES
+    /**
+     * Returns the max of two integers
+     * @param       a       the first integer
+     * @param       b       the second integer
+     * @return      the larger of the two given integers
+     */
     private static int max(int a, int b) {
         return (a > b) ? a : b;
     }
-    //return true if node at index i is a leaf, false otherwise
-    private boolean isLeaf(int i) {
-        return (this.tree[i].left == -1 && this.tree[i].right == -1);
-    }
+    /**
+     * Cleans the node at index i by setting its fields to -1 or null.
+     * @param       i       the index of the node to be cleaned
+     */
     private void cleanNode(int i) {
-        this.tree[i].key = 0;
+        this.tree[i].key = -1;
         this.tree[i].value = null;
-        this.tree[i].height = 0;
+        this.tree[i].height = -1;
         this.tree[i].left = -1;
         this.tree[i].right = -1;
     }
-    //returns balance factor of subtree rooted by node at index i
+    /**
+     * Returns the balance factor of the subtree rooted by the node at index i.
+     *
+     * Balance factor is defined as the difference between a node's left and
+     * right subtrees.
+     * @return      the balance factor of the specified node
+     */
     private int balanceFactor(int i) {
         return this.height(this.tree[i].left) - this.height(this.tree[i].right);
     }
-    //get height of a node at index i
+    /**
+     * Returns the height of the node at index i or -1 if i is not active
+     * @return      the height of the node at index i or -1
+     */
     private int height(int i) {
         return (i != -1) ? this.tree[i].height : -1;
     }
-    //update the height of a node at index i
+    /**
+     * Updates the height of the node at index i
+     */
     private void updateHeight(int i) {
         int lInd = this.tree[i].left;
         int rInd = this.tree[i].right;
@@ -326,10 +377,11 @@ public class FixedSizeHashMap<T> {
         else
             this.tree[i].height = this.max(this.height(lInd), this.height(rInd)) + 1;
     }
-    //inorder printing of subtree rooted by node at index i
-    public void print() {
-        this.preorderPrint(this.rootInd, "");
-    }
+    /**
+     * Preorder prints this hash map's implicit tree
+     * @param       i       the root of the subtree to print
+     * @param       indent  the string indentation to print
+     */
     private void preorderPrint(int i, String indent) {
         if (i >= 0) {
             System.out.println(indent + this.tree[i] + " " + this.height(i));
