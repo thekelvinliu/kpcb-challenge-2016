@@ -225,31 +225,7 @@ public class FixedSizeHashMap<T> {
             this.preorderPrint(this.tree[i].right, indent + "  ");
         }
     }
-    // public void bfsPrint() {
-    //     int x, currentLevel, nextLevel;
-    //     ArrayDeque<Integer> q = new ArrayDeque<Integer>(this.size);
-    //     q.add(this.rootInd);
-    //     currentLevel = 1;
-    //     nextLevel = 0;
-    //     while (!q.isEmpty()) {
-    //         x = q.remove();
-    //         currentLevel--;
-    //         System.out.print(" ");
-    //         if (x != -1) {
-    //             q.add(this.tree[x].left);
-    //             q.add(this.tree[x].right);
-    //             nextLevel += 2;
-    //             System.out.print(this.tree[x]);
-    //         }
-    //         else System.out.print("(  ,  )");
-    //         System.out.print(" ");
-    //         if (currentLevel == 0) {
-    //             currentLevel = nextLevel;
-    //             nextLevel = 0;
-    //             System.out.println();
-    //         }
-    //     }
-    // }
+
     public Node<T> getRoot() {
         return this.tree[this.rootInd];
     }
