@@ -1,192 +1,80 @@
 package com.thekelvinliu.KPCBChallenge;
 
-/**
- * A generic (homogeneous) fixed-size hash map.
- *
- * Creates an AVL tree to maintain a self-balancing binary search tree of nodes.
- * Nodes hold the hashed value of a String as keys and objects of type T as
- * values. An AVL tree is used to achieve O(log n) set, get, and delete time
- * complexity. If more information was given about the intended use for this
- * fixed-size hash map, a different type of self-balancing tree could be used.
- * For example, if just a few values held in the fixed-size hash map were
- * frequently accessed, a splay tree would be preferred.
- * @param       <T>     the type of value that will be handled by this hash map.
- */
 public class FixedSizeHashMap<T> {
-    //HELPER CLASSES
-    /**
-     * A generic class that represents a node in a binary tree.
-     *
-     * Each node holds a key and a value, as well as references to a node's
-     * parent and left and right children. Because this class is not accessible
-     * to the outside world, fields will be accessed and modified directly by
-     * FixedSizeHashMap or AVLTree for convenience.
-     * @param       <T>     the type of the value to be held by this node.
-     */
+    //HELPER CLASS
     class Node<T> {
-        // INSTANCE VARIABLES
-        /**
-         * This node's key.
-         */
+        //INSTANCE VARIABLES
         public int key;
-        /**
-         * This node's value.
-         */
         public T value;
-        /**
-         * The height of this node inside a tree
-         */
         public int height;
-        /**
-         * This node's parent.
-         */
-        public Node<T> parent;
-        /**
-         * This node's left child.
-         */
-        public Node<T> left;
-        /**
-         * This node's right child.
-         */
-        public Node<T> right;
+        public int left;
+        public int right;
 
-        // CONSTRUCTOR
-        /**
-         * Creates a node instance.
-         *
-         * Does not require key or value upon instantiation, as Nodes will
-         * always be pre-allocated upon creation of a FixedSizeHashMap instance.
-         * @param       parent       the parent of the newly created node
-         */
-        public Node(Node<T> parent) {
+        //CONSTRUCTOR
+        public Node() {
             this.key = 0;
             this.value = null;
             this.height = 0;
-            this.parent = parent;
-            this.left = null;
-            this.right = null;
+            this.left = -1;
+            this.right = -1;
         }
 
         //METHODS
-        /**
-         * Returns the height of this node's left child.
-         * @return      the neight of this node's left child
-         */
-        public int lHeight() {
-            return (this.left != null) ? this.left.height : 0;
-        }
-        /**
-         * Returns the height of this node's right child.
-         * @return      the neight of this node's right child
-         */
-        public int rHeight() {
-            return (this.right != null) ? this.right.height : 0;
-        }
-        /**
-         * Returns index, key, and value information about this node.
-         * @return      a string with information about this node.
-         */
         public String toString() {
-            return "Node with key " + this.key + " and value " + this.value + ".";
+            String retval = "(" + this.key + ", ";
+            retval += (this.value != null) ? this.value.toString() + ")" : "NULL)";
+            return retval;
         }
     }
-    /**
-     * A binary search tree made of generic nodes.
-     *
-     * This binary search tree is self-balacing and uses and AVL tree design. It
-     * is used as the internal data structure of the fixed-size hash map.
-     */
-    class AVLTree<T> {
-        //INSTANCE VARIABLES
-        /**
-         * The root of this tree.
-         */
-        private Node<T> root;
-        //CONSTRUCTOR
-        /**
-         * Creates an empty tree.
-         */
-        public AVLTree() {
-            this.root = null;
-        }
-        //METHODS
-    }
 
-    //INSTANCE VARIALBES
-    /**
-     * The root of the internal tree for this fixed-size hash map.
-     */
-    private AVLTree<T> tree;
-
-    /**
-     * A stack-like doubly linked list used to store unsued nodes.
-     *
-     * The node class is recycled to accomplish this doubly linked list. A
-     * node's next node is the node's right child. A node's previous node is the
-     * node's parent.
-     */
-    private Node<T> nodeBank;
-    /**
-     * The maximum number of items this fixed-size hash map can hold.
-     */
-    private int size;
-    /**
-     * The current number of items in this fixed-size hash map.
-     */
+    //INSTANCE VARIABLES
+    private Node[] tree;
+    private int rootInd;
+    private final int size;
     private int items;
 
     //CONSTRUCTOR
-    /**
-     * Creates an instance of a fixed-size hash map.
-     *
-     * Pre-allocates nodes based on size arguement.
-     * @param       size    the max size of this hash map
-     */
     public FixedSizeHashMap(int size) {
-        this.tree = new AVLTree<T>();
-        this.nodeBank = new Node<T>(null);
-        Node<T> cur = this.nodeBank;
-        for (int i = 1; i < size; i++) {
-            cur.right = new Node<T>(cur);
-            cur = cur.right;
-        }
+        this.tree = new Node[size];
+        for (int i = 0; i < size; i++) this.tree[i] = new Node();
+        this.rootInd = -1;
         this.size = size;
         this.items = 0;
     }
 
-    //USER METHODS (PUBLIC)
-    /**
-     * Returns a boolean indicating whether key was associated with value.
-     *
-     * Success of this operation depends on three primary constrains:
-     * (1) there must be at least one available node
-     * (2) key must not already be used in this fixed-size hash map
-     * (3) value must not be null
-     * @param       key     the key to be associated
-     * @param       value   the value to be associated
-     * @return      boolean indicating success (true) or failure (false)
-     */
+    //USER METHODS
     public boolean set(String key, T value) {
-        if (this.items < this.size && value != null) {
-
+        this.tree[this.items].key = key.hashCode();
+        this.tree[this.items].value = value;
+        if (this.rootInd == -1) {
+            this.rootInd = this.items++;
             return true;
-        } else {
+        }
+        else if (this.items < this.size && value != null) {
+            try {
+                this.rootInd = this.insert(this.items, this.rootInd); //might fight fail if key is already in use.
+                this.items++;
+                return true;
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+                this.cleanNode(this.items);
+                return false;
+            }
+        }
+        else {
+            this.cleanNode(this.items);
             return false;
         }
     }
-    /**
-     * Returns the value corresponding to a given key.
-     * @param       key     the key used to identify the returned value
-     * @return      the value associated with key or null
-     */
     public T get(String key) {
-        return null;
+        if (this.rootInd == -1)
+            return null;
+        else {
+            int nodeInd = this.find(key.hashCode(), this.rootInd);
+            if (nodeInd != -1) return (T) this.tree[nodeInd].value;
+            else return null;
+        }
     }
-    /**
-     * Returns the value corresponding to a given key after deleting the entry.
-     * @param       key     the key used to identify the node to delete
-     * @return      the value of the node deleted or null
-     */
     public T delete(String key) {
         return null;
     }
@@ -197,46 +85,172 @@ public class FixedSizeHashMap<T> {
     public float load() {
         return (float)this.items/this.size;
     }
-
-    //NODEBANK UTILITY METHODS (PRIVATE)
-    /**
-     * Returns (pops) a node from this.nodeBank.
-     * @return      a node
-     */
-    private Node<T> getNode() {
-        Node<T> retNode = this.nodeBank;
-        this.nodeBank = retNode.right;
-        this.nodeBank.parent = retNode.parent;
-        retNode.right = null;
-        return retNode;
+    public int getItemCount() {
+        return this.items;
     }
-    /**
-     * Puts (pushes) a node into this.nodeBank.
-     * @param       node    the node to be put into this.nodeBank
-     */
-    private void putNode(Node<T> node) {
-        node.parent = this.nodeBank.parent;
-        node.right = this.nodeBank;
-        this.nodeBank.parent = node;
-        this.nodeBank = node;
+    public int getSize() {
+        return this.size;
     }
 
-    //TREE UTILITY METHODS (PRIVATE)
-    /**
-     * Updates the height of the given node based on its children.
-     * @param       n       the node to be updated
-     */
-    private void updateHeight (Node<T> n) {
-        n.height = (n.lHeight() > n.rHeight()) ? n.lHeight() : n.rHeight();
-        n.height++;
+    //TREE METHODS
+    private int insert(int newInd, int parInd) throws IllegalArgumentException {
+        int newParInd = parInd;
+        //insert into left subtree
+        if (this.tree[newInd].key < this.tree[parInd].key) {
+            if (this.tree[parInd].left == -1) {
+                this.tree[parInd].left = newInd;
+            }
+            else {
+                this.tree[parInd].left = this.insert(newInd, this.tree[parInd].left);
+                if (this.balanceFactor(parInd) == 2) {
+                    int lInd = this.tree[parInd].left;
+                    if (lInd != -1 && this.tree[newInd].key < this.tree[lInd].key) {
+                        newParInd = this.rotateCaseLeftLeft(parInd);
+                    }
+                    else {
+                        newParInd = this.rotateCaseLeftRight(parInd);
+                    }
+                }
+            }
+        //insert into right subtree
+        } else if (this.tree[newInd].key > this.tree[parInd].key) {
+            if (this.tree[parInd].right == -1) {
+                this.tree[parInd].right = newInd;
+            }
+            else {
+                this.tree[parInd].right = this.insert(newInd, this.tree[parInd].right);
+                if (this.balanceFactor(parInd) == -2) {
+                    int rInd = this.tree[parInd].right;
+                    if (rInd != -1 && this.tree[newInd].key < this.tree[rInd].key) {
+                        newParInd = this.rotateCaseRightLeft(parInd);
+                    }
+                    else {
+                        newParInd = this.rotateCaseRightRight(parInd);
+                    }
+                }
+            }
+        //bad key
+        } else {
+            throw new IllegalArgumentException("Key already used.");
+        }
+        this.updateHeight(parInd);
+        return newParInd;
     }
-    /**
-     * Returns whether or not the subtree rooted by the given node is balanced.
-     * @param       n       the node to check
-     * @return      boolean indicating balanced (true) or not balanced (false)
-     */
-    private boolean isBalanced(Node<T> n) {
-        int balFactor = n.lHeight() - n.rHeight();
-        return (-1 <= balFactor && balFactor <= 1) ? true : false;
+    private int find(int key, int startInd) {
+        if (startInd == -1) {
+            return startInd;
+        } else if (key == this.tree[startInd].key) {
+            return startInd;
+        } else if (key < this.tree[startInd].key) {
+            return this.find(key, this.tree[startInd].left);
+        } else {
+            return this.find(key, this.tree[startInd].right);
+        }
+    }
+
+    //TREE ROTATIONS
+    private int rotateCaseLeftLeft(int startInd) {
+        int newStartInd = this.tree[startInd].left;
+        this.tree[startInd].left = this.tree[newStartInd].right;
+        this.tree[newStartInd].right = startInd;
+        //update heights
+        this.updateHeight(startInd);
+        this.updateHeight(newStartInd);
+        return newStartInd;
+    }
+    private int rotateCaseRightRight(int startInd) {
+        int newStartInd = this.tree[startInd].right;
+        this.tree[startInd].right = this.tree[newStartInd].left;
+        this.tree[newStartInd].left = startInd;
+        //update heights
+        this.updateHeight(startInd);
+        this.updateHeight(newStartInd);
+        return newStartInd;
+    }
+    private int rotateCaseLeftRight(int startInd) {
+        this.tree[startInd].left = this.rotateCaseRightRight(this.tree[startInd].left);
+        return this.rotateCaseLeftLeft(startInd);
+    }
+    private int rotateCaseRightLeft(int startInd) {
+        this.tree[startInd].right = this.rotateCaseLeftLeft(this.tree[startInd].right);
+        return this.rotateCaseRightRight(startInd);
+    }
+
+    //UTILITIES
+    private static int max(int a, int b) {
+        return (a > b) ? a : b;
+    }
+    //return true if node at index i is a leaf, false otherwise
+    private boolean isLeaf(int i) {
+        return (this.tree[i].left == -1 && this.tree[i].right == -1);
+    }
+    private void cleanNode(int i) {
+        this.tree[i].key = 0;
+        this.tree[i].value = null;
+        this.tree[i].height = 0;
+        this.tree[i].left = -1;
+        this.tree[i].right = -1;
+    }
+    //returns balance factor of subtree rooted by node at index i
+    private int balanceFactor(int i) {
+        return this.height(this.tree[i].left) - this.height(this.tree[i].right);
+    }
+    //get height of a node at index i
+    private int height(int i) {
+        return (i != -1) ? this.tree[i].height : -1;
+    }
+    //update the height of a node at index i
+    private void updateHeight(int i) {
+        int lInd = this.tree[i].left;
+        int rInd = this.tree[i].right;
+        if (lInd == -1 && rInd == -1)
+            this.tree[i].height = 0;
+        else if (lInd != -1 && rInd == -1)
+            this.tree[i].height = this.tree[lInd].height + 1;
+        else if (lInd == -1 && rInd != -1)
+            this.tree[i].height = this.tree[rInd].height + 1;
+        else
+            this.tree[i].height = this.max(this.height(lInd), this.height(rInd)) + 1;
+    }
+    //inorder printing of subtree rooted by node at index i
+    public void print() {
+        System.out.println();
+        this.preorderPrint(this.rootInd, "");
+    }
+    private void preorderPrint(int i, String indent) {
+        if (i >= 0) {
+            System.out.println(indent + this.tree[i] + " " + this.height(i));
+            this.preorderPrint(this.tree[i].left, indent + "  ");
+            // if (i == this.rootInd) System.out.print("* ");
+            this.preorderPrint(this.tree[i].right, indent + "  ");
+        }
+    }
+    // public void bfsPrint() {
+    //     int x, currentLevel, nextLevel;
+    //     ArrayDeque<Integer> q = new ArrayDeque<Integer>(this.size);
+    //     q.add(this.rootInd);
+    //     currentLevel = 1;
+    //     nextLevel = 0;
+    //     while (!q.isEmpty()) {
+    //         x = q.remove();
+    //         currentLevel--;
+    //         System.out.print(" ");
+    //         if (x != -1) {
+    //             q.add(this.tree[x].left);
+    //             q.add(this.tree[x].right);
+    //             nextLevel += 2;
+    //             System.out.print(this.tree[x]);
+    //         }
+    //         else System.out.print("(  ,  )");
+    //         System.out.print(" ");
+    //         if (currentLevel == 0) {
+    //             currentLevel = nextLevel;
+    //             nextLevel = 0;
+    //             System.out.println();
+    //         }
+    //     }
+    // }
+    public Node<T> getRoot() {
+        return this.tree[this.rootInd];
     }
 }
