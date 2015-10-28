@@ -130,16 +130,22 @@ public class FixedSizeHashMap<T> {
      * At this time, all nodes are created and put into the array. Because there
      * are not yet any entries in the hash map, the root index is set to -1,
      * and the number of items is set to 0.
+     *
      * @param       size    the fixed-size of this hash map
+     * @throws      IllegalArgumentException    if size is zero or negative
      */
     public FixedSizeHashMap(int size) {
-        this.tree = new Node[size];
-        for (int i = 0; i < size; i++) this.tree[i] = new Node();
-        this.bitmap = new byte[size/8 + 1];
-        this.rootInd = -1;
-        this.delInd = -1;
-        this.size = size;
-        this.items = 0;
+        if (size > 0) {
+            this.tree = new Node[size];
+            for (int i = 0; i < size; i++) this.tree[i] = new Node();
+            this.bitmap = new byte[size/8 + 1];
+            this.rootInd = -1;
+            this.delInd = -1;
+            this.size = size;
+            this.items = 0;
+        } else {
+            throw new IllegalArgumentException("Size must be a positive integer.");
+        }
     }
 
     //USER METHODS, PRESCRIBED BY KPCB (PUBLIC)
