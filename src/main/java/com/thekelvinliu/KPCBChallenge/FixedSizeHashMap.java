@@ -135,7 +135,7 @@ public class FixedSizeHashMap<T> {
     public FixedSizeHashMap(int size) {
         this.tree = new Node[size];
         for (int i = 0; i < size; i++) this.tree[i] = new Node();
-        this.bitmap = new byte[size/8];
+        this.bitmap = new byte[size/8 + 1];
         this.rootInd = -1;
         this.delInd = -1;
         this.size = size;
@@ -170,7 +170,7 @@ public class FixedSizeHashMap<T> {
                 this.items++;
                 return true;
             } catch (IllegalArgumentException e) {
-                e.printStackTrace();
+                // e.printStackTrace();
                 //clean up and return false
                 this.tree[newInd].clean();
                 return false;
@@ -584,12 +584,12 @@ public class FixedSizeHashMap<T> {
         int j = 0;
         for (; this.bitmap[i] == 0xFF; i++);
         for (; j < 8; j++) {
-            //break out of the loop the first time a 0 is encountered
+            //break out of loop the first time a 0 is encountered
             if ((this.bitmap[i] & (1 << j)) == 0) {
                 break;
             }
         }
-        //ensure the value to be returned is valid
+        //ensure the returned value is less than the max size of this hashmap
         return (8*i + j < this.size) ? 8*i + j : -1;
     }
 
