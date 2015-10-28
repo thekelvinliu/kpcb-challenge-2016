@@ -30,7 +30,7 @@ public class FixedSizeHashMap<T> {
      *
      * @param       <T>     the type of the value to be held by this node
      */
-    private class Node<T> {
+    private final class Node<T> {
         //INSTANCE VARIABLES
         /**
          * The key held by this node.
@@ -302,6 +302,7 @@ public class FixedSizeHashMap<T> {
      *
      * @param       key         the key to search for
      * @param       startInd    the index of the subtree root
+     * @return      the index of the node with the given key
      */
     private int find(int key, int startInd) {
         if (startInd == -1) {
@@ -443,6 +444,7 @@ public class FixedSizeHashMap<T> {
      * Balance factor is defined as the difference between a node's left and
      * right subtrees.
      *
+     * @param       i       the index of a node
      * @return      the balance factor of the specified node
      */
     private int balanceFactor(int i) {
@@ -451,6 +453,7 @@ public class FixedSizeHashMap<T> {
     /**
      * Returns the height of the node at index i or -1 if i is not active.
      *
+     * @param       i       the index of a node
      * @return      the height of the node at index i or -1
      */
     private int height(int i) {
@@ -483,6 +486,7 @@ public class FixedSizeHashMap<T> {
      * See <a href="https://en.wikipedia.org/wiki/AVL_tree#Insertion">this</a>
      * Wikipedia article for examples of the cases used.
      *
+     * @param       startInd    the index of the subtree root
      * @return      the new start index after rotation
      */
     private int rotateCaseLL(int startInd) {
@@ -500,6 +504,7 @@ public class FixedSizeHashMap<T> {
      * See <a href="https://en.wikipedia.org/wiki/AVL_tree#Insertion">this</a>
      * Wikipedia article for examples of the cases used.
      *
+     * @param       startInd    the index of the subtree root
      * @return      the new start index after rotation
      */
     private int rotateCaseRR(int startInd) {
@@ -517,6 +522,7 @@ public class FixedSizeHashMap<T> {
      * See <a href="https://en.wikipedia.org/wiki/AVL_tree#Insertion">this</a>
      * Wikipedia article for examples of the cases used.
      *
+     * @param       startInd    the index of the subtree root
      * @return      the new start index after rotation
      */
     private int rotatecaseLR(int startInd) {
@@ -529,6 +535,7 @@ public class FixedSizeHashMap<T> {
      * See <a href="https://en.wikipedia.org/wiki/AVL_tree#Insertion">this</a>
      * Wikipedia article for examples of the cases used.
      *
+     * @param       startInd    the index of the subtree root
      * @return      the new start index after rotation
      */
     private int rotateCaseRL(int startInd) {
@@ -581,24 +588,24 @@ public class FixedSizeHashMap<T> {
     private static int max(int a, int b) {
         return (a > b) ? a : b;
     }
-    /**
-     * Prints the implicit tree in a preorder fashion. Only used for testing.
-     */
-    public void print() {
-        this.preorderPrint(this.rootInd, "");
-    }
-    /**
-     * Preorder prints this hash map's implicit tree
-     *
-     * @param       i       the root of the subtree to print
-     * @param       indent  the string indentation to print
-     */
-    private void preorderPrint(int i, String indent) {
-        if (i >= 0) {
-            System.out.println(indent + this.tree[i] + " " + this.height(i));
-            this.preorderPrint(this.tree[i].left, indent + "  ");
-            // if (i == this.rootInd) System.out.print("* ");
-            this.preorderPrint(this.tree[i].right, indent + "  ");
-        }
-    }
+    // /**
+    //  * Prints the implicit tree in a preorder fashion. Only used for testing.
+    //  */
+    // public void print() {
+    //     this.preorderPrint(this.rootInd, "");
+    // }
+    // /**
+    //  * Preorder prints this hash map's implicit tree
+    //  *
+    //  * @param       i       the root of the subtree to print
+    //  * @param       indent  the string indentation to print
+    //  */
+    // private void preorderPrint(int i, String indent) {
+    //     if (i >= 0) {
+    //         System.out.println(indent + this.tree[i] + " " + this.height(i));
+    //         this.preorderPrint(this.tree[i].left, indent + "  ");
+    //         // if (i == this.rootInd) System.out.print("* ");
+    //         this.preorderPrint(this.tree[i].right, indent + "  ");
+    //     }
+    // }
 }

@@ -23,7 +23,7 @@ dependencies {
 
 //generate javadocs for everything in this package
 tasks.withType(Javadoc) {
-    options.memberLevel = JavadocMemberLevel.PACKAGE
+    options.memberLevel = JavadocMemberLevel.PRIVATE
 }
 
 //copy jar lib to another folder
