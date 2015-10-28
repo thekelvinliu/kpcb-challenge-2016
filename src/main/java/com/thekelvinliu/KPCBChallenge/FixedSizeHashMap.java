@@ -3,19 +3,18 @@ package com.thekelvinliu.KPCBChallenge;
 /**
  * A generic, homogeneous fixed-size hash map.
  *
- * This hash map uses an implicit AVL Tree to maintain a self-balancing binay
+ * This hash map uses an implicit AVL Tree to maintain a self-balancing binary
  * search tree. Each node of the tree represents an entry in the hash map. The
- * hash map accepts Strings as keys and internally stores the hashed values of
- * the Strings using {@link java.lang.String#hashCode()}. Because this class is
- * implemented with java generics, the mapped values can be of any type, however
- * each individual instance of this hash map may only hold a single type.
+ * hash map accepts strings as keys and internally stores the hashed values of
+ * these strings using {@link java.lang.String#hashCode()}. This class is
+ * implemented with java generics, allowing the mapped values to be of any type,
+ * however an individual instance of this hash map may only hold a single type.
  * <p>
- * Each node of this implicit tree is actually stored in a single array. Nodes
- * have integer fields which hold the indices of the left and right children in
- * the this array. This hash map uses modified implementations of standard AVL
- * Tree operations to achieve O(log n) set, get, and delete time complexity.
- * @author      <a href="mailto:kelvin@thekelvinliu.com">Kelvin Liu</a>
- * @version     1.0.0
+ * Each node of the implicit tree is stored in an array. A Node has integer
+ * fields, which hold the array indices of a node's left and right children in
+ * the implicit tree. This hash map uses modified implementations of standard
+ * AVL Tree operations to achieve O(log n) set, get, and delete time complexity.
+ *
  * @param       <T>         the type of value that this hash map will hold
  * @see         com.thekelvinliu.KPCBChallenge.FixedSizeHashMap.Node
  */
@@ -28,21 +27,30 @@ public class FixedSizeHashMap<T> {
      * left and right children. Because this class is not accessible to the
      * outside world, fields will be accessed and modified directly by
      * FixedSizeHashMap for convenience.
+     *
      * @param       <T>     the type of the value to be held by this node
      */
-    class Node<T> {
+    private class Node<T> {
         //INSTANCE VARIABLES
-        //the key held by this node
+        /**
+         * The key held by this node.
+         */
         private int key;
-        //the value held by this node
+        /**
+         * The value held by this node.
+         */
         private T value;
-        //the height of this node
+        /**
+         * The height of this node.
+         */
         private int height;
-        //the index of this node's parent
-        private int parent;
-        //the index of this node's left child
+        /**
+         * The index of this node's left child.
+         */
         private int left;
-        //the index of this node's right child
+        /**
+         * The index of this node's right child.
+         */
         private int right;
 
         //CONSTRUCTOR
@@ -52,12 +60,8 @@ public class FixedSizeHashMap<T> {
          * All integer fields are set to -1, which in the context of this whole
          * class, refers to being null. The value field is actually set to null.
          */
-        Node() {
-            this.key = -1;
-            this.value = null;
-            this.height = -1;
-            this.left = -1;
-            this.right = -1;
+        private Node() {
+            this.clean();
         }
 
         //METHODS
@@ -71,21 +75,53 @@ public class FixedSizeHashMap<T> {
             retval += ", " + this.left + ", " + this.right + ")";
             return retval;
         }
+        /**
+         * Resets all fields of this node to their original value (-1 or null).
+         */
+        private void clean() {
+            this.key = -1;
+            this.value = null;
+            this.height = -1;
+            this.left = -1;
+            this.right = -1;
+        }
     }
 
     //INSTANCE VARIABLES
-    //an array of nodes representing this hash map's implicit AVL Tree
-    public Node[] tree;
-    //bitmap used to mark which indices in the array hold active nodes.
-    public byte[] bitmap;
-    //the array index of the root
-    public int rootInd;
-    //the size of this hash map
-    public final int size;
-    //the number of items currently in this hash map
-    public int items;
-    //recently deleted index
-    public int delInd;
+    /**
+     * The array that holds all of this hash map's nodes.
+     *
+     * The nodes in this array may be active or inactive in the this hash map's
+     * implicit tree. An active node must have a non null value and nonnegative
+     * height field.
+     */
+    private Node[] tree;
+    /**
+     * The bitmap used to mark which nodes in the array are active.
+     *
+     * This bitmap is accomplished with a byte array. Because of this, up to 7
+     * extra bits might be unused, as they point to indices outside the bounds
+     * of the node array.
+     */
+    private byte[] bitmap;
+    /**
+     * The array index of this hash map's implicit root.
+     */
+    private int rootInd;
+    /**
+     * The array index the node most recently deleted from the implicit tree.
+     *
+     * This will typically be -1 if a node hasn't been deleted.
+     */
+    private int delInd;
+    /**
+     * The fixed size of this hash map.
+     */
+    private final int size;
+    /**
+     * The number of items currently in this hash map.
+     */
+    private int items;
 
     //CONSTRUCTOR
     /**
@@ -101,63 +137,24 @@ public class FixedSizeHashMap<T> {
         for (int i = 0; i < size; i++) this.tree[i] = new Node();
         this.bitmap = new byte[size/8];
         this.rootInd = -1;
+        this.delInd = -1;
         this.size = size;
         this.items = 0;
     }
 
-    // private int getAvailableNode() {
-    //     for (int i = 0; i < this.size; i++) {
-    //         if (this.bitmap[i] == 0) {
-    //             return i;
-    //         }
-    //     }
-    //     return -1;
-    // }
-
-    // private void bitFlip(int x) {
-    //     this.bitmap[x] = (this.bitmap[x] == 1) ? (byte)0 : (byte)1;
-    // }
-
-
-    // public void pb() {
-    //     for (int i = 0; i < this.bitmap.length; i++) {
-    //         for (int j = 0; j < 8; j++) {
-    //             System.out.print((this.bitmap[i] & (1 << j)) + " ");
-    //         }
-    //         System.out.print(". ");
-    //     }
-    //     System.out.println();
-    // }
-
-    public int getAvailableNode() {
-        int i = 0;
-        int j = 0;
-        for (; this.bitmap[i] == 0xFF; i++);
-        for (; j < 8; j++) {
-            if ((this.bitmap[i] & (1 << j)) == 0) {
-                return 8*i + j;
-            }
-        }
-        return -1;
-    }
-
-    public void bitFlip(int x) {
-        int index = x/8;
-        int offset = x%8;
-        this.bitmap[index] ^= (1 << offset);
-    }
-
-    //USER METHODS (PUBLIC)
+    //USER METHODS, PRESCRIBED BY KPCB (PUBLIC)
     /**
-     * Returns a boolean indicating whether key was associated with value.
+     * Associates given key to a given value in this hash map.
      *
-     * Success of this operation depends on three primary constrains:<p>
-     * (1) there must be at least one available node<p>
-     * (2) the value must not be null<p>
-     * (3) key must not already be used in this fixed-size hash map
+     * Also returns a boolean indicating the success or failure of this
+     * operation. Success depends on the following three constraints:<p>
+     * (1) there must be at least one inactive node in this hash map,<p>
+     * (2) the given value must not be null,<p>
+     * (3) the given key must not already be associated with a value.
+     *
      * @param       key     the key to be associated
      * @param       value   the value to be associated
-     * @return      boolean indicating success (true) or failure (false)
+     * @return      a boolean indicating success (true) or failure (false)
      */
     public boolean set(String key, T value) {
         if (this.items < this.size && value != null) {
@@ -175,7 +172,7 @@ public class FixedSizeHashMap<T> {
             } catch (IllegalArgumentException e) {
                 e.printStackTrace();
                 //clean up and return false
-                this.cleanNode(newInd);
+                this.tree[newInd].clean();
                 return false;
             }
         } else {
@@ -187,8 +184,9 @@ public class FixedSizeHashMap<T> {
      *
      * This will fail and return null if there are no entries in this hash map,
      * or if the key is not found.
-     * @param       key     the key paired with the returned value
-     * @return      the value associated with key or null
+     *
+     * @param       key     the key associated with the returned value
+     * @return      the value associated with key (or null)
      */
     public T get(String key) {
         if (this.items > 0 && this.rootInd != -1) {
@@ -200,20 +198,27 @@ public class FixedSizeHashMap<T> {
         }
     }
     /**
-     * Deletes the entry with the given key and returns the associated value.
+     * Deletes the entry with the given key from this hash map.
      *
-     * This will fail and return null if there are no entries in this hash map,
-     * or if the key is not found.
+     * Also returns the keys associated value. This operation can fail if there
+     * are no active nodes in the implicit tree, or if the given key is not
+     * associated with any values in this hash map. If this happens, null is
+     * returned.
+     *
+     * @param       key     the key of the entry to be deleted
      * @param       key     the key paired with the returned value
      * @return      the value associated with key or null
      */
     public T delete(String key) {
         if (this.items > 0 && this.rootInd != -1) {
-            //get the index of the node with the given string
+            //attempt to remove the node with key from the implicit tree
             this.rootInd = this.remove(key.hashCode(), this.rootInd);
+            //this.delInd will hold the index of the node that should be delted
             if (this.delInd != -1) {
+                //save the return value
                 T retval = (T) this.tree[delInd].value;
-                this.cleanNode(this.delInd);
+                //clean the deleted node and mark as inactive
+                this.tree[this.delInd].clean();
                 this.bitFlip(this.delInd);
                 this.delInd = -1;
                 this.items--;
@@ -226,146 +231,19 @@ public class FixedSizeHashMap<T> {
         }
     }
 
-
-    /**
-     * Removes node with key from the subtree rooted by node at startInd.
-     *
-     * This method recursively traverses the implicit subtree rooted by the node
-     * at startInd to find and remove the node with the given key. Depending on
-     * the number of children the found node has, it may or may not rebalance
-     * the implicit tree using {@link FixedSizeHashMap#rebalance}.
-     * @param       key         the key of the node to be removed
-     * @param       startInd    the index of the subtree root
-     * @return      the index of the (new) subtree root
-     */
-    private int remove(int key, int startInd) {
-        //startInd isn't actually part of the implicit tree
-        if (startInd == -1) {
-            this.delInd = -1;
-            return -1;
-        }
-        //remove from left subtree
-        else if (key < this.tree[startInd].key) {
-            this.tree[startInd].left = this.remove(key, this.tree[startInd].left);
-            return this.rebalance(startInd);
-        }
-        //remove from right subtree
-        else if (key > this.tree[startInd].key) {
-            this.tree[startInd].right = this.remove(key, this.tree[startInd].right);
-            return this.rebalance(startInd);
-        }
-        //startInd is the node to be removed
-        else {
-            int lInd = this.tree[startInd].left;
-            int rInd = this.tree[startInd].right;
-            //node is a leaf, simply remove it
-            if (lInd == -1 && rInd == -1) {
-                this.delInd = startInd;
-                return -1;
-            }
-            //node has a single child, give the node it's grandchildren
-            else if (lInd != -1 && rInd == -1) {
-                this.delInd = startInd;
-                return lInd;
-            } else if (lInd == -1 && rInd != -1) {
-                this.delInd = startInd;
-                return rInd;
-            }
-            //node has two children, replace the node it's successor (smallest
-            //node in right subtree), then remove the successor
-            else {
-                int smallestInd = this.getSmallest(rInd);
-                int tempInd = startInd;
-                this.nodeKVSwap(startInd, smallestInd);
-                this.tree[startInd].right = this.remove(this.tree[smallestInd].key, rInd);
-                this.delInd = smallestInd;
-                return this.rebalance(startInd);
-            }
-        }
-    }
-
-        // else {
-        //     int curInd = startInd;
-        //     int prevInd = curInd;
-        //     while (key != this.tree[curInd].key) {
-        //         if (key < this.tree[curInd].key) {
-        //             prevInd = curInd;
-        //             curInd = this.tree[curInd].left;
-        //         } else {
-        //             prevInd = curInd;
-        //             curInd = this.tree[curInd].right;
-        //         }
-        //     }
-        //     //now, curInd is the index of the node that needs removal
-        //     //prevInd has the parent of curInd
-        //     T tempValue = (T) this.tree[curInd].value;
-        //     int lInd = this.tree[curInd].left;
-        //     int rInd = this.tree[curInd].right;
-        //     //node is a leaf, simply remove it
-        //     if (lInd == -1 && rInd == -1) {
-        //         this.cleanNode(curInd);
-        //         this.delValue = tempValue;
-        //         return -1;
-        //     }
-        //     //node has a single child, give the node it's grandchildren
-        //     else if (lInd != -1 && rInd == -1) {
-        //         this.cleanNode(curInd);
-        //         this.delValue = tempValue;
-        //         return lInd;
-        //     } else if (lInd == -1 && rInd != -1) {
-        //         this.cleanNode(curInd);
-        //         this.delValue = tempValue;
-        //         return rInd;
-        //     }
-        //     //node has two children, replace the node it's successor (smallest
-        //     //node in right subtree), then remove the successor
-        //     else {
-        //         int smallestInd = this.getSmallest(rInd);
-        //         this.nodeKVSwap(startInd, smallestInd);
-        //         this.remove(this.tree[smallestInd].key, rInd);
-        //         this.tree[startInd].right = this.remove(this.tree[smallestInd].key, rInd);
-        //         return this.rebalance(startInd);
-        //     }
-        // }
-    /**
-     * Returns the index of the smallest node in the subtree rooted by startInd.
-     * @param       startInd    the index of the subtree root
-     * @return      the index of the node with the smallest key
-     */
-    private int getSmallest(int startInd) {
-        if (this.tree[startInd].left != -1) {
-            return this.getSmallest(this.tree[startInd].left);
-        } else {
-            return startInd;
-        }
-    }
-    /**
-     * swaps the keys and values of a and b the node at index a with the node at index b.
-     *
-     * Only overwrites the key and value fields of the nodes. The height and
-     * indices of the children are left untouched.
-     * @param       a       the index of the node to be overwritten (dst)
-     * @param       b       the index of the node with the data to write (src)
-     */
-    private void nodeKVSwap(int a, int b) {
-        int tempKey = this.tree[a].key;
-        this.tree[a].key = this.tree[b].key;
-        this.tree[b].key = tempKey;
-        T tempValue = (T) this.tree[a].value;
-        this.tree[a].value = this.tree[b].value;
-        this.tree[b].value = tempValue;
-    }
-
-
     /**
      * Returns the load (ratio of items to size) of this fixed-size hash map.
+     *
      * @return      the load of this fixed-size hash map
      */
     public float load() {
         return (float)this.items/this.size;
     }
+
+    //EXTRAS (PUBLIC)
     /**
      * Returns the number of items currently in this hash map.
+     *
      * @return      the number of items currently in this hash map
      */
     public int getItemCount() {
@@ -373,26 +251,22 @@ public class FixedSizeHashMap<T> {
     }
     /**
      * Returns the maximum number of items that this hash map can hold.
+     *
      * @return      the maximum number of items that this hash map can hold
      */
     public int getSize() {
         return this.size;
     }
-    /**
-     * Prints the implicit tree in a preorder fashion. Only used for testing.
-     */
-    public void print() {
-        this.preorderPrint(this.rootInd, "");
-    }
 
-    //TREE METHODS (PRIVATE)
+    //TREE UTILITIES (PRIVATE)
     /**
-     * Inserts node at newInd into the subtree rooted by node at startInd.
+     * Inserts the node at newInd to the subtree rooted by the node at startInd.
      *
      * This method recursively traverses the implicit subtree rooted by the node
-     * at startInd in order to find the proper place to put the new node. It
+     * at startInd in order to find the proper place to insert the new node. It
      * then calls {@link FixedSizeHashMap#rebalance} to enforce the height
      * invariant for AVL Trees.
+     *
      * @param       newInd      the index of the node to be inserted
      * @param       startInd    the index of the subtree root
      * @return      the index of the (new) subtree root
@@ -420,11 +294,88 @@ public class FixedSizeHashMap<T> {
         return this.rebalance(startInd);
     }
     /**
+     * Returns the index of the node with the given key.
+     *
+     * This method recursively traverses the tree, beginning at the node at
+     * index startInd. If startInd is not actually a node in the tree, -1 will
+     * be returned, indicating that no node was found with the given key.
+     *
+     * @param       key         the key to search for
+     * @param       startInd    the index of the subtree root
+     */
+    private int find(int key, int startInd) {
+        if (startInd == -1) {
+            return -1;
+        } else if (key == this.tree[startInd].key) {
+            return startInd;
+        } else if (key < this.tree[startInd].key) {
+            return this.find(key, this.tree[startInd].left);
+        } else {
+            return this.find(key, this.tree[startInd].right);
+        }
+    }
+    /**
+     * Removes node with key from the subtree rooted by node at startInd.
+     *
+     * This method recursively traverses the implicit subtree rooted by the node
+     * at startInd to find and remove the node with the given key. Depending on
+     * the number of children the found node has, it may or may not rebalance
+     * the implicit tree using {@link FixedSizeHashMap#rebalance}.
+     *
+     * @param       key         the key of the node to be removed
+     * @param       startInd    the index of the subtree root
+     * @return      the index of the (new) subtree root
+     */
+    private int remove(int key, int startInd) {
+        //startInd isn't actually part of the implicit tree
+        if (startInd == -1) {
+            this.delInd = -1;
+            return -1;
+        }
+        //remove from left subtree
+        else if (key < this.tree[startInd].key) {
+            this.tree[startInd].left = this.remove(key, this.tree[startInd].left);
+            return this.rebalance(startInd);
+        }
+        //remove from right subtree
+        else if (key > this.tree[startInd].key) {
+            this.tree[startInd].right = this.remove(key, this.tree[startInd].right);
+            return this.rebalance(startInd);
+        }
+        //startInd is the node to be removed
+        else {
+            int lInd = this.tree[startInd].left;
+            int rInd = this.tree[startInd].right;
+            this.delInd = startInd;
+            //node is a leaf, simply remove it
+            if (lInd == -1 && rInd == -1) {
+                return -1;
+            }
+            //node has a single child, give the node it's grandchildren
+            else if (lInd != -1 && rInd == -1) {
+                return lInd;
+            } else if (lInd == -1 && rInd != -1) {
+                return rInd;
+            }
+            //node has two children, replace the node it's successor (smallest
+            //node in right subtree), then remove the successor
+            else {
+                int smallestInd = this.getSmallest(rInd);
+                int tempInd = startInd;
+                this.nodeKVSwap(startInd, smallestInd);
+                this.tree[startInd].right = this.remove(this.tree[smallestInd].key, rInd);
+                this.delInd = smallestInd;
+                return this.rebalance(startInd);
+            }
+        }
+    }
+    /**
      * Rebalances the subtree rooted by the node at index startInd.
      *
      * Based on the balance factor of the given node, this method will apply the
      * appropriate tree rotation. This method is NOT recursive and will only
      * apply the rotation to the node at index startInd.
+     *
      * @param       startInd    the index of the subree root
      * @return      the index of the (new) subtree root
      * @see         FixedSizeHashMap#balanceFactor
@@ -458,32 +409,80 @@ public class FixedSizeHashMap<T> {
         return newStartInd;
     }
     /**
-     * Returns the index of the node containing key.
+     * Returns the index of the smallest node in the subtree rooted by startInd.
      *
-     * This method recursively traverses the tree, beginning at the node at
-     * index startInd. If startInd is not actually a node in the tree, -1 will
-     * be returned, indicating that no node was found with the given key.
-     * @param       key         the key to search for
      * @param       startInd    the index of the subtree root
+     * @return      the index of the node with the smallest key
      */
-    private int find(int key, int startInd) {
-        if (startInd == -1) {
-            return -1;
-        } else if (key == this.tree[startInd].key) {
-            return startInd;
-        } else if (key < this.tree[startInd].key) {
-            return this.find(key, this.tree[startInd].left);
+    private int getSmallest(int startInd) {
+        if (this.tree[startInd].left != -1) {
+            return this.getSmallest(this.tree[startInd].left);
         } else {
-            return this.find(key, this.tree[startInd].right);
+            return startInd;
+        }
+    }
+    /**
+     * Swaps the keys and values of the nodes at indeces a and b.
+     * Only the key and value fields are swapped. All other fields are left
+     * untouched.
+     *
+     * @param       a       the index of the node to be overwritten (dst)
+     * @param       b       the index of the node with the data to write (src)
+     */
+    private void nodeKVSwap(int a, int b) {
+        int tempKey = this.tree[a].key;
+        this.tree[a].key = this.tree[b].key;
+        this.tree[b].key = tempKey;
+        T tempValue = (T) this.tree[a].value;
+        this.tree[a].value = this.tree[b].value;
+        this.tree[b].value = tempValue;
+    }
+    /**
+     * Returns the balance factor of the subtree rooted by the node at index i.
+     *
+     * Balance factor is defined as the difference between a node's left and
+     * right subtrees.
+     *
+     * @return      the balance factor of the specified node
+     */
+    private int balanceFactor(int i) {
+        return this.height(this.tree[i].left) - this.height(this.tree[i].right);
+    }
+    /**
+     * Returns the height of the node at index i or -1 if i is not active.
+     *
+     * @return      the height of the node at index i or -1
+     */
+    private int height(int i) {
+        return (i != -1) ? this.tree[i].height : -1;
+    }
+    /**
+     * Updates the height of the node at index i
+     *
+     * @param       i       the index of the node to be updated
+     */
+    private void updateHeight(int i) {
+        if (i != -1) {
+            int lInd = this.tree[i].left;
+            int rInd = this.tree[i].right;
+            if (lInd == -1 && rInd == -1)
+                this.tree[i].height = 0;
+            else if (lInd != -1 && rInd == -1)
+                this.tree[i].height = this.tree[lInd].height + 1;
+            else if (lInd == -1 && rInd != -1)
+                this.tree[i].height = this.tree[rInd].height + 1;
+            else
+                this.tree[i].height = this.max(this.height(lInd), this.height(rInd)) + 1;
         }
     }
 
-    //TREE ROTATIONS
+    //TREE ROTATIONS (PRIVATE)
     /**
      * Performs a tree rotation for the left left case at startInd.
      *
      * See <a href="https://en.wikipedia.org/wiki/AVL_tree#Insertion">this</a>
      * Wikipedia article for examples of the cases used.
+     *
      * @return      the new start index after rotation
      */
     private int rotateCaseLL(int startInd) {
@@ -500,6 +499,7 @@ public class FixedSizeHashMap<T> {
      *
      * See <a href="https://en.wikipedia.org/wiki/AVL_tree#Insertion">this</a>
      * Wikipedia article for examples of the cases used.
+     *
      * @return      the new start index after rotation
      */
     private int rotateCaseRR(int startInd) {
@@ -516,6 +516,7 @@ public class FixedSizeHashMap<T> {
      *
      * See <a href="https://en.wikipedia.org/wiki/AVL_tree#Insertion">this</a>
      * Wikipedia article for examples of the cases used.
+     *
      * @return      the new start index after rotation
      */
     private int rotatecaseLR(int startInd) {
@@ -527,6 +528,7 @@ public class FixedSizeHashMap<T> {
      *
      * See <a href="https://en.wikipedia.org/wiki/AVL_tree#Insertion">this</a>
      * Wikipedia article for examples of the cases used.
+     *
      * @return      the new start index after rotation
      */
     private int rotateCaseRL(int startInd) {
@@ -534,9 +536,44 @@ public class FixedSizeHashMap<T> {
         return this.rotateCaseRR(startInd);
     }
 
-    //UTILITIES
+    //BITMAP UTILITIES (PRIVATE)
     /**
-     * Returns the max of two integers
+     * Returns the index of the first available node in the internal array.
+     *
+     * Iterates over this hash map's internal bitmap and searches for the first
+     * bit that is set to 0.
+     *
+     * @return      The index of the first available node
+     */
+    private int getAvailableNode() {
+        int i = 0;
+        int j = 0;
+        for (; this.bitmap[i] == 0xFF; i++);
+        for (; j < 8; j++) {
+            //break out of the loop the first time a 0 is encountered
+            if ((this.bitmap[i] & (1 << j)) == 0) {
+                break;
+            }
+        }
+        //ensure the value to be returned is valid
+        return (8*i + j < this.size) ? 8*i + j : -1;
+    }
+
+    /**
+     * Flips the xth bit in the hash map's internal bitmap.
+     *
+     * @param       x       the bitmap index that should be flipped
+     */
+    private void bitFlip(int x) {
+        int index = x/8;
+        int offset = x%8;
+        this.bitmap[index] ^= (1 << offset);
+    }
+
+    //MISC UTILITIES
+    /**
+     * Returns the max of two integers.
+     *
      * @param       a       the first integer
      * @param       b       the second integer
      * @return      the larger of the two given integers
@@ -545,52 +582,14 @@ public class FixedSizeHashMap<T> {
         return (a > b) ? a : b;
     }
     /**
-     * Cleans the node at index i by setting its fields to -1 or null.
-     * @param       i       the index of the node to be cleaned
+     * Prints the implicit tree in a preorder fashion. Only used for testing.
      */
-    private void cleanNode(int i) {
-        this.tree[i].key = -1;
-        this.tree[i].value = null;
-        this.tree[i].height = -1;
-        this.tree[i].left = -1;
-        this.tree[i].right = -1;
-    }
-    /**
-     * Returns the balance factor of the subtree rooted by the node at index i.
-     *
-     * Balance factor is defined as the difference between a node's left and
-     * right subtrees.
-     * @return      the balance factor of the specified node
-     */
-    private int balanceFactor(int i) {
-        return this.height(this.tree[i].left) - this.height(this.tree[i].right);
-    }
-    /**
-     * Returns the height of the node at index i or -1 if i is not active
-     * @return      the height of the node at index i or -1
-     */
-    private int height(int i) {
-        return (i != -1) ? this.tree[i].height : -1;
-    }
-    /**
-     * Updates the height of the node at index i
-     */
-    private void updateHeight(int i) {
-        if (i != -1) {
-            int lInd = this.tree[i].left;
-            int rInd = this.tree[i].right;
-            if (lInd == -1 && rInd == -1)
-                this.tree[i].height = 0;
-            else if (lInd != -1 && rInd == -1)
-                this.tree[i].height = this.tree[lInd].height + 1;
-            else if (lInd == -1 && rInd != -1)
-                this.tree[i].height = this.tree[rInd].height + 1;
-            else
-                this.tree[i].height = this.max(this.height(lInd), this.height(rInd)) + 1;
-        }
+    public void print() {
+        this.preorderPrint(this.rootInd, "");
     }
     /**
      * Preorder prints this hash map's implicit tree
+     *
      * @param       i       the root of the subtree to print
      * @param       indent  the string indentation to print
      */
