@@ -1,8 +1,6 @@
 package com.thekelvinliu.KPCBChallenge;
 
 import java.io.Console;
-import java.util.Scanner;
-import com.thekelvinliu.KPCBChallenge.FixedSizeHashMap;
 
 public class Main {
     public static void main(String[] args) {
