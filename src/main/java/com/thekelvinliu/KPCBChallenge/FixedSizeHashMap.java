@@ -257,6 +257,12 @@ public class FixedSizeHashMap<T> {
     public int getSize() {
         return this.size;
     }
+    /**
+     * Clears this hash map by removing every key-value association.
+     */
+    public void clear() {
+        this._clear(this.rootInd);
+    }
 
     //TREE UTILITIES (PRIVATE)
     /**
@@ -478,6 +484,27 @@ public class FixedSizeHashMap<T> {
                 this.tree[i].height = this.max(this.height(lInd), this.height(rInd)) + 1;
         }
     }
+    /**
+     * Removes every node from the subtree rooted by the node at index startInd.
+     *
+     * This method does postorder traversal of the implicit tree so as to remove
+     * key and value data from each node and flip all active bits in the bitmap.
+     *
+     * @param       startInd    the index of the subtree root
+     */
+    private void _clear(int startInd) {
+        if (startInd != -1) {
+            if (this.tree[startInd].left != -1) {
+                this._clear(this.tree[startInd].left);
+            }
+            if (this.tree[startInd].right != -2) {
+                this._clear(this.tree[startInd].right);
+            }
+            this.tree[startInd].clean();
+            this.bitFlip(startInd);
+            this.items--;
+        }
+    }
 
     //TREE ROTATIONS (PRIVATE)
     /**
@@ -588,24 +615,24 @@ public class FixedSizeHashMap<T> {
     private static int max(int a, int b) {
         return (a > b) ? a : b;
     }
-    // /**
-    //  * Prints the implicit tree in a preorder fashion. Only used for testing.
-    //  */
-    // public void print() {
-    //     this.preorderPrint(this.rootInd, "");
-    // }
-    // /**
-    //  * Preorder prints this hash map's implicit tree
-    //  *
-    //  * @param       i       the root of the subtree to print
-    //  * @param       indent  the string indentation to print
-    //  */
-    // private void preorderPrint(int i, String indent) {
-    //     if (i >= 0) {
-    //         System.out.println(indent + this.tree[i] + " " + this.height(i));
-    //         this.preorderPrint(this.tree[i].left, indent + "  ");
-    //         // if (i == this.rootInd) System.out.print("* ");
-    //         this.preorderPrint(this.tree[i].right, indent + "  ");
-    //     }
-    // }
+    /**
+     * Prints the implicit tree in a preorder fashion. Only used for testing.
+     */
+    public void print() {
+        this.preorderPrint(this.rootInd, "");
+    }
+    /**
+     * Preorder prints this hash map's implicit tree
+     *
+     * @param       i       the root of the subtree to print
+     * @param       indent  the string indentation to print
+     */
+    private void preorderPrint(int i, String indent) {
+        if (i >= 0) {
+            System.out.println(indent + this.tree[i] + " " + this.height(i));
+            this.preorderPrint(this.tree[i].left, indent + "  ");
+            // if (i == this.rootInd) System.out.print("* ");
+            this.preorderPrint(this.tree[i].right, indent + "  ");
+        }
+    }
 }
