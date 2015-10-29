@@ -31,7 +31,7 @@ public class FixedSizeHashMapTest {
     @Test
     public void testSet() {
         for (int i = 0; i < size; i++) {
-            String k = "number_" + Integer.toString(i);
+            String k = "test_key_" + Integer.toString(i);
             int v = rg.nextInt();
             assertTrue(intMap.set(k, v));
             assertTrue(strMap.set(k, Integer.toString(v)));
@@ -40,9 +40,23 @@ public class FixedSizeHashMapTest {
     }
 
     @Test
+    public void testSetDuplicateKey() {
+        for (int i = 0; i < size; i++) {
+            String k = "test_key_" + Integer.toString(i);
+            int v = rg.nextInt();
+            assertTrue(intMap.set(k, v));
+            assertTrue(strMap.set(k, Integer.toString(v)));
+            assertTrue(boolMap.set(k, v%2 == 0));
+            assertFalse(intMap.set(k, v));
+            assertFalse(strMap.set(k, Integer.toString(v)));
+            assertFalse(boolMap.set(k, v%2 == 0));
+        }
+    }
+
+    @Test
     public void testGet() {
         for (int i = 0; i < size; i++) {
-            String k = "number_" + Integer.toString(i);
+            String k = "test_key_" + Integer.toString(i);
             int v = rg.nextInt();
             if (intMap.set(k, v)) {
                 assertEquals((int)v, (int)intMap.get(k));
@@ -59,7 +73,7 @@ public class FixedSizeHashMapTest {
     @Test
     public void testDelete() {
         for (int i = 0; i < size; i++) {
-            String k = "number_" + Integer.toString(i);
+            String k = "test_key_" + Integer.toString(i);
             int v = rg.nextInt();
             if (intMap.set(k, v)) {
                 assertEquals((int)intMap.delete(k), (int)v);
@@ -79,7 +93,7 @@ public class FixedSizeHashMapTest {
     @Test
     public void testLoad() {
         for (int i = 0; i < size; i++) {
-            String k = "number_" + Integer.toString(i);
+            String k = "test_key_" + Integer.toString(i);
             int v = rg.nextInt();
             if (intMap.set(k, v)) {
                 assertEquals((float)(i + 1)/size, intMap.load(), 0.00001);
