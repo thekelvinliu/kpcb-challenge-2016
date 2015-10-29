@@ -251,26 +251,12 @@ public class FixedSizeHashMap<T> {
 
     //EXTRAS (PUBLIC)
     /**
-     * Returns the number of items currently in this hash map.
-     *
-     * @return      the number of items currently in this hash map
-     */
-    public int getItemCount() {
-        return this.items;
-    }
-    /**
      * Returns the maximum number of items that this hash map can hold.
      *
      * @return      the maximum number of items that this hash map can hold
      */
     public int getSize() {
         return this.size;
-    }
-    /**
-     * Clears this hash map by removing every key-value association.
-     */
-    public void clear() {
-        this._clear(this.rootInd);
     }
 
     //TREE UTILITIES (PRIVATE)
@@ -492,27 +478,6 @@ public class FixedSizeHashMap<T> {
                 this.tree[i].height = this.tree[rInd].height + 1;
             else
                 this.tree[i].height = this.max(this.height(lInd), this.height(rInd)) + 1;
-        }
-    }
-    /**
-     * Removes every node from the subtree rooted by the node at index startInd.
-     *
-     * This method does postorder traversal of the implicit tree so as to remove
-     * key and value data from each node and flip all active bits in the bitmap.
-     *
-     * @param       startInd    the index of the subtree root
-     */
-    private void _clear(int startInd) {
-        if (startInd != -1) {
-            if (this.tree[startInd].left != -1) {
-                this._clear(this.tree[startInd].left);
-            }
-            if (this.tree[startInd].right != -2) {
-                this._clear(this.tree[startInd].right);
-            }
-            this.tree[startInd].clean();
-            this.bitFlip(startInd);
-            this.items--;
         }
     }
 
