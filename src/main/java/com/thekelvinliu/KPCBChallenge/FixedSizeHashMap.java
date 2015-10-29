@@ -165,7 +165,6 @@ public class FixedSizeHashMap<T> {
     public boolean set(String key, T value) {
         if (this.items < this.size && value != null) {
             int newInd = this.getAvailableNode();
-            if (key == "e") System.out.println(newInd);
             this.tree[newInd].key = key.hashCode();
             this.tree[newInd].value = value;
             this.tree[newInd].height = 0;
@@ -175,6 +174,10 @@ public class FixedSizeHashMap<T> {
                 this.bitFlip(newInd);
                 this.items++;
                 return true;
+            } catch (ArrayIndexOutOfBoundsException e) {
+                e.printStackTrace();
+                System.out.printf("%d    %d", newInd, this.rootInd);
+                return false;
             } catch (IllegalArgumentException e) {
                 // e.printStackTrace();
                 //clean up and return false
@@ -394,11 +397,13 @@ public class FixedSizeHashMap<T> {
      * @see         FixedSizeHashMap#balanceFactor
      */
     private int rebalance(int startInd) {
+        if (startInd == -1) System.out.println("shit");
         int newStartInd;
+        int lInd = this.tree[startInd].left;
+        int rInd = this.tree[startInd].right;
         //left subtree heavy
         if (this.balanceFactor(startInd) == 2) {
-            int lInd = this.tree[startInd].left;
-            if (lInd == -1) {
+            if (this.tree[lInd].left == -1) {
                 newStartInd = this.rotateCaseLL(startInd);
             } else {
                 newStartInd = this.rotatecaseLR(startInd);
@@ -406,8 +411,7 @@ public class FixedSizeHashMap<T> {
         }
         //right subtree heavy
         else if (this.balanceFactor(startInd) == -2) {
-            int rInd = this.tree[startInd].right;
-            if (rInd == -1) {
+            if (this.tree[rInd].right == -1) {
                 newStartInd = this.rotateCaseRL(startInd);
             } else {
                 newStartInd = this.rotateCaseRR(startInd);
@@ -524,12 +528,16 @@ public class FixedSizeHashMap<T> {
      */
     private int rotateCaseLL(int startInd) {
         int newStartInd = this.tree[startInd].left;
-        this.tree[startInd].left = this.tree[newStartInd].right;
-        this.tree[newStartInd].right = startInd;
-        //update heights
-        this.updateHeight(startInd);
-        this.updateHeight(newStartInd);
-        return newStartInd;
+        if (newStartInd == -1) {
+            return startInd;
+        } else {
+            this.tree[startInd].left = this.tree[newStartInd].right;
+            this.tree[newStartInd].right = startInd;
+            //update heights
+            this.updateHeight(startInd);
+            this.updateHeight(newStartInd);
+            return newStartInd;
+        }
     }
     /**
      * Performs a tree rotation for the right right case at startInd.
@@ -542,12 +550,16 @@ public class FixedSizeHashMap<T> {
      */
     private int rotateCaseRR(int startInd) {
         int newStartInd = this.tree[startInd].right;
-        this.tree[startInd].right = this.tree[newStartInd].left;
-        this.tree[newStartInd].left = startInd;
-        //update heights
-        this.updateHeight(startInd);
-        this.updateHeight(newStartInd);
-        return newStartInd;
+        if (newStartInd == -1) {
+            return startInd;
+        } else {
+            this.tree[startInd].right = this.tree[newStartInd].left;
+            this.tree[newStartInd].left = startInd;
+            //update heights
+            this.updateHeight(startInd);
+            this.updateHeight(newStartInd);
+            return newStartInd;
+        }
     }
     /**
      * Performs a tree rotation for the left right case at startInd.
@@ -587,8 +599,8 @@ public class FixedSizeHashMap<T> {
      */
     private int getAvailableNode() {
         int i = 0;
+        for (; this.bitmap[i] == -1; i++);
         int j = 0;
-        for (; this.bitmap[i] == 0xFF; i++);
         for (; j < 8; j++) {
             //break out of loop the first time a 0 is encountered
             if ((this.bitmap[i] & (1 << j)) == 0) {
