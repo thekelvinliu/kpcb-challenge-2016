@@ -2,6 +2,9 @@ package com.thekelvinliu.KPCBChallenge;
 
 import java.io.Console;
 
+/**
+ * A text-based, interactive program that demonstrates FixedSizeHashMap.
+ */
 public class Main {
     public static void main(String[] args) {
         //variables
@@ -29,6 +32,7 @@ public class Main {
             }
             choice = Integer.parseInt(input);
             switch (choice) {
+                //set
                 case 1:
                     while (choice != 0) {
                         key = c.readLine("Enter a key: ");
@@ -46,6 +50,7 @@ public class Main {
                         }
                     }
                     break;
+                //get
                 case 2:
                     while (choice != 0) {
                         key = c.readLine("Enter a key: ");
@@ -62,6 +67,7 @@ public class Main {
                         }
                     }
                     break;
+                //delete
                 case 3:
                     while (choice != 0) {
                         key = c.readLine("Enter a key: ");
@@ -78,9 +84,11 @@ public class Main {
                         }
                     }
                     break;
+                //load factor
                 case 4:
                     c.printf("%nThe current load factor is %.3f.%n", hm.load());
                     break;
+                //exit
                 case 5:
                 default:
                     System.out.println("Thanks for trying this out!");
@@ -88,6 +96,9 @@ public class Main {
             }
         }
     }
+    /**
+     * Prints the menu for this interactive program.
+     */
     public static void printMenu() {
         System.out.println();
         System.out.println("What would you like to do?");
