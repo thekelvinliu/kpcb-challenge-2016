@@ -179,7 +179,6 @@ public class FixedSizeHashMap<T> {
                 System.out.printf("%d    %d", newInd, this.rootInd);
                 return false;
             } catch (IllegalArgumentException e) {
-                // e.printStackTrace();
                 //clean up and return false
                 this.tree[newInd].clean();
                 return false;
@@ -597,25 +596,5 @@ public class FixedSizeHashMap<T> {
      */
     private static int max(int a, int b) {
         return (a > b) ? a : b;
-    }
-    /**
-     * Prints the implicit tree in a preorder fashion. Only used for testing.
-     */
-    public void print() {
-        this.preorderPrint(this.rootInd, "");
-    }
-    /**
-     * Preorder prints this hash map's implicit tree
-     *
-     * @param       i       the root of the subtree to print
-     * @param       indent  the string indentation to print
-     */
-    private void preorderPrint(int i, String indent) {
-        if (i >= 0) {
-            System.out.println(indent + this.tree[i] + " " + this.height(i));
-            this.preorderPrint(this.tree[i].left, indent + "  ");
-            // if (i == this.rootInd) System.out.print("* ");
-            this.preorderPrint(this.tree[i].right, indent + "  ");
-        }
     }
 }
